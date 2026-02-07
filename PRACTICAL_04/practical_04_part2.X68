@@ -21,14 +21,20 @@ START:                  ; first instruction of program
     MOVE.B  #$22,    D3
     
     ;Bitwise AND D2 and D3
-    ;Whats new location of player
+    ;Whats new location of player? location of player is $2 (2 in decimal)
     AND.B   D2,   D3
+    
+    ;D2 = $12 -> 0001 0010
+    ;D3 = $22 -> 0010 0010
+    ;D2 AND D3-> 0000 0010 = $02
+    ;AND RULE: True and ONLY true when both A and B are TRUE
+    
+    
     
     OR.B    D2,   D3
     
     
-    EOR.B   D3,   D3
-         SDASDFASDFASDF
+    EOR.B   D2,   D3
           
     LEA     $3000, A1 ; Load memory address $3000 into Address register A1
     
@@ -42,7 +48,3 @@ START:                  ; first instruction of program
 
     END    START        ; last line of source
 
-*~Font name~Courier New~
-*~Font size~10~
-*~Tab type~1~
-*~Tab size~4~
