@@ -1,0 +1,97 @@
+*-----------------------------------------------------------
+* Title      :
+* Written by :
+* Date       :
+* Description:
+*-----------------------------------------------------------
+    ORG    $1000
+START:                  ; first instruction of program
+    
+    BSR WELCOME
+    BSR CHOOSE_FACTION
+    BSR ENDL
+    
+    ;print back the choice so we can see it worked
+    
+    MOVE.B  FACTION,D1
+    MOVE.B  #3,D0           ;D0=3 => print number in D1 (the kit uses this)
+    TRAP    #15
+    
+    BSR CONTINUE
+    
+
+*-------------------------------------------------------
+*-------------------WELCOME SUBROUTINE------------------
+*-------------------------------------------------------
+WELCOME:
+    BSR     ENDL            ;BRANCH TO ENDL SUBROUTINE
+    LEA     WELCOME_MSG,A1  ;ASSIGN MESSAGE TO ADDRESS REGISTER A1
+    MOVE.B  #14,D0          ;MOVE LITERAL 14 TO DO
+    TRAP    #15             ;TRAP AND INTERPRET VALUE IN D0
+    BSR     ENDL            ;BRANCH TO ENDL SUBROUTINE
+    BSR     CONTINUE        ;BRANCH TO CONTINUE SUBROUTINE 
+    RTS                     ;RETURN FROM WELCOME: SUBROUTINE
+    
+*-------------------------------------------------------
+*------------------------CONTINUE-------------------------
+*-------------------------------------------------------
+CONTINUE:
+    BSR     ENDL            ;BRANCH TO ENDL SUBROUTINE
+    LEA     CONTINUE_MSG,A1 ;ASSIGN MESSAGE TO ADDRESS REGISTER A1
+    MOVE.B  #14,D0          ;MOVE LITERAL 14 TO DO
+    TRAP    #15             ;TRAP AND INTERPRET VALUE IN D0
+    
+    MOVE.B  #4,D0           ;MOVE LITERAL 4 TO DO
+    TRAP    #15             ;TRAP AND INTERPRET VALUE IN D0
+    RTS                     ;RETURN FROM SUBROUTINE 
+
+
+*-------------------------------------------------------
+*------------------------CHOOSE FACTION-------------------------
+*-------------------------------------------------------
+CHOOSE_FACTION:
+    BSR     ENDL        ;PRINT A NEW LINE
+    
+    LEA     FACTION_MSG,A1  ;A1 = address of message
+    MOVE.B  #14,D0          ;D0=14 => print string
+    TRAP    #15             ;do it!
+    
+    MOVE.B #4,D0            ;D0=4 => read input
+    TRAP    #15             ;result goes into D1
+    
+ENDL:
+    MOVEM.L D0/A1,-(A7)     ;SAVE D0 AND A1
+    MOVE    #14,D0          ;MOVE LITERAL 14 TO DO
+    LEA     CRLF,A1         ;ASSIGN CRLF TO ADDRESS REGISTER A1
+    TRAP    #15             ;TRAP AND INTERPRET VALUE IN D0
+    MOVEM.L (A7)+,D0/A1     ;RESTORE D0 AND A1
+    RTS                     ;RETURN FROM ENDL: SUBROUTINE
+
+
+    SIMHALT             ; halt simulator
+
+* Put variables and constants here
+CRLF:           DC.B    $0D,$0A,0
+
+WELCOME_MSG:
+    DC.B '************************************************************'
+    DC.B $0D,$0A
+    DC.B 'WELCOME TO THE LUCKY TRIAL!'
+    DC.B $0D,$0A
+    DC.B 'YOU MUST REACH 150 BRAVERY POINTS TO ESCAPE.'
+    DC.B $0D,$0A
+    DC.B 'IF YOUR BRAVERY REACHES 0, YOU LOSE.'
+    DC.B $0D,$0A
+    DC.B 'STARTING BRAVERY: 100'
+    DC.B $0D,$0A
+    DC.B '************************************************************'
+    DC.B $0D,$0A,0
+    
+CONTINUE_MSG: DC.B 'PRESS ANYKEY TO CONTINUE: ',0
+
+FACTION: DS.B   1 ; 1=Spain, 2=England
+
+FACTION_MSG: DC.B 'CHOOSE YOUR FACTION: 1=SPAIN, 2=ENGLAND: ',0
+
+    END    START        ; last line of source
+
