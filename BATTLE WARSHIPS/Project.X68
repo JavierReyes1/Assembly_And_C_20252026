@@ -430,7 +430,3 @@ CELL_MISS:      DC.B  '[0]',0
 *~Tab type~1~
 *~Tab size~4~
 
-*~Font name~Courier New~
-*~Font size~10~
-*~Tab type~1~
-*~Tab size~4~
