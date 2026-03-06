@@ -1,24 +1,35 @@
 *-------------------------------------------------------
+* SPAIN vs ENGLAND - NAVAL BATTLE 1588
+* THE SPANISH ARMADA vs THE ENGLISH FLEET
+* BUILT ON EASY68K | 68K MOTOROLA ASSEMBLY
+* 
+* BOARD: 5x5 GRID
+* SHIPS: 3 (GALLEON, FRIGATE, CARAVEL)
+* SHOTS: 10
+* WIN:   SINK ALL 3 SHIPS
+* LOSE:  RUN OUT OF SHOTS
+*
+*-------------------------------------------------------
+*AUTHOR: JAVIER REYES
+*DATE: 28/04/2026
+*-------------------------------------------------------
+
+
+*-------------------------------------------------------
 * STARTING MEMORY ADDRESS FOR THE PROGRAMME $1000
 *-------------------------------------------------------
 	ORG $1000
-*-------------------------------------------------------
-*CHOOSE TO BE A MINI KNIGHT OR A TINY EXPLORER
-*-------------------------------------------------------
 
-*-------------------------------------------------------
-*VALIDATION VALUES TO BE USED, MODIFY AS NEEDED
-*-------------------------------------------------------
-EXIT		EQU 0			;USED TO EXIT ASSEMBLY PROGRAM
-MIN_POTIONS	EQU 1			;MIN NUMBER OF SMALL POTIONS
-MAX_POTIONS	EQU 9			;MAX NUMBER OF SMALL POTIONS
-MIN_WEAPONS	EQU 1			;MIN WEAPONS (NEEDLE SWORD, ACORN SHIELD)
-MAX_WEAPONS	EQU 3			;MAX WEAPONS
-WIN_POINT	EQU 5			;BRAVERY POINTS GAINED ON SUCCESS
-LOSE_POINT	EQU 8			;BRAVERY POINTS LOST ON FAILURE
 
-DANGER_LOC  EQU 100         ;USED FOR SIMPLE COLLISION DETECTION
-                            ;* EXAMPLE FOR A HIT (GIANT FOOTSTEP)
+EXIT		     EQU 0			 ;USED TO EXIT ASSEMBLY PROGRAM
+TOTAL_SHIPS	     EQU 3			 ;TOTAL SHIPS TO SINK
+MAX_SHOTS        EQU 10          ;MAXIMUM CANNON SHOTS
+GRID_SIZE        EQU 5           ;5x5 BOARD
+CELL_EMPTY       EQU 0           ;OCEAN
+CELL_SHIP        EQU 1           ;SHIP HIDDEN
+CELL_HIT_VAL     EQU 2           ;HIT
+CELL_MISS_VAL    EQU 3           ;MISS
+
 
 *START OF GAME
 START:
@@ -27,7 +38,7 @@ START:
     
     BSR     INIT            ;BRANCH TO INIT TO INITIALIZE OCEAN AND SHIPS
     BSR     WELCOME         ;BRANCH TO THE WELCOME SUBROUTINE
-    ;BSR     INPUT           ;BRANCH TO THE INPUT SUBROUTINE
+    
     BSR     GAME            ;BRANCH TO THE GAME SUBROUTINE
 
 *GAME LOOP
@@ -83,11 +94,22 @@ INIT_LOOP:
 *----------DRAW_BOARD: PRINT THE 5x5 GRID--------------
 *-------------------------------------------------------
 DRAW_BOARD:
+    LEA     GRID_HEADER, A1 ;
+    MOVE.B  #14, D0
+    TRAP    #15
+    BSR     ENDL
+    
     LEA     BOARD, A0       ;A0 = START OF BOARD
     MOVE.B  #5, D5          ;D5 = ROW COUNTER (5 ROWS)
+    MOVE.B  #1, D6          ;D6 = CURRENT ROW NUMBER (1-5)
     
 DB_ROW:
-    MOVE.B  #5, D4          ;D4 = COL COUNTER (5 COLS)
+    MOVE.B  D6, D1          ;D1 = ROW NUMBER
+    MOVE.B  #3, D0          ;TRAP 3 =PRINT NUMBER
+    TRAP    #15
+    
+    MOVE.B  #5, D4          ;D4 = COL COUNTER
+    
     
 DB_COL:
     MOVE.B  (A0)+, D2       ;D2 = CURRENT CELL VALUE, ADVANCE A0
@@ -117,10 +139,72 @@ DB_NEXT:
     SUB.B   #1, D4          ;DECREMENT COL COUNTER
     BNE     DB_COL          ;NEXT COLUMN
     BSR     ENDL            ;END OF ROW = NEW LINE
+    ADD.B   #1, D6
     SUB.B   #1, D5          ;DECREMENT ROW COUNTER
     BNE     DB_ROW          ;NEXT ROW
     
     RTS
+
+*-------------------------------------------------------
+*---CHECK_WIN: DID THE PLAYER SINK ALL SHIPS?-----------
+*-------------------------------------------------------
+CHECK_WIN:
+    MOVE.B  SHIPS_LEFT, D0  ;D0 = SHIPS REMAINING
+    CMP.B   #0, D0          ;IS IT 0?
+    BEQ     PLAYER_WINS     ;YES -> GAME OVER
+    RTS                     ;NO -> KEEP PLAYING
+    
+PLAYER_WINS:
+    BSR     ENDL
+    BSR     DECORATE
+    LEA     WIN_MSG, A1
+    MOVE.B  #14, D0
+    TRAP    #15
+    BSR     DECORATE
+    BSR     ENDL
+    BRA     END         ;JUMP TO END(GAME IS OVER)
+
+*-------------------------------------------------------
+*---CHECK_LOSE: DID THE PLAYER RUN OUT OF SHOTS?--------
+*-------------------------------------------------------
+CHECK_LOSE:
+    MOVE.B  SHOTS_LEFT, D0 ;D0 = SHOTS REMAINING
+    CMP.B   #0, D0         ;IS IT 0?
+    BEQ     PLAYER_LOSES   ;YES -> GAME OVER!
+    RTS                     ;NO -> KEEP PLAYING!
+
+PLAYER_LOSES:
+    BSR     ENDL
+    BSR     DECORATE
+    LEA     LOSE_MSG, A1
+    MOVE.B #14, D0
+    TRAP    #15
+    BSR     DECORATE
+    BSR     ENDL
+    BRA     END     
+    
+*-------------------------------------------------------
+*---INVALID_INPUT: PLAYER TYPED OUT OF RANGE-----------
+*-------------------------------------------------------
+INVALID_INPUT:
+    BSR ENDL
+    LEA INVALID_MSG, A1
+    MOVE.B  #14, D0
+    TRAP    #15
+    BSR     INPUT       ;ASK AGAIN
+    RTS
+
+ROW_INVALID:
+    LEA     INVALID_MSG, A1     ; print "INVALID! Enter 1-5"
+    MOVE.B  #14, D0
+    TRAP    #15
+    BRA     POTIONS             ; jump back to start of POTIONS
+    
+COL_INVALID:
+    LEA     INVALID_MSG, A1     ; print "INVALID! Enter 1-5"
+    MOVE.B  #14, D0
+    TRAP    #15
+    BRA     WEAPONS             ; jump back to start of WEAPONS
 
 END:
     SIMHALT
@@ -141,15 +225,20 @@ WELCOME:
 *---------GAMEPLAY INPUT VALUES SUBROUTINE--------------
 *-------------------------------------------------------    
 INPUT:
+    BSR     ENDL
+    LEA     GAMEPLAY_MSG,A1 ;ASSIGN MESSAGE TO ADDRESS REGISTER A1
+    MOVE.B  #14, D0
+    TRAP    #15
     BSR     POTIONS         ;BRANCH TO POTION INPUT SUBROUTINE
     BSR     ENDL            ;BRANCH TO ENDL SUBROUTINE
     BSR     WEAPONS         ;BRANCH TO WEAPONS INPUT SUBROUTINE
 
     RTS
 
-*-------------------------------------------------------
-*----------------GAMELOOP (MAIN LOOP)-------------------
-*------------------------------------------------------- 
+*-------------------------------------------------------------
+*----------------GAMELOOP: MAIN GAME LOOP---------------------
+* ORDER: UPDATE -> DRAW -> INPUT -> GAMEPLAY -> HUD -> REPLAY
+*-------------------------------------------------------------
 GAMELOOP:
 
     BSR     UPDATE          ;BRANCH TO UPDATE (UPDATE STATUS) 
@@ -185,16 +274,20 @@ UPDATE:
 DRAW:
     BSR     ENDL            ;BRANCH TO ENDL SUBROUTINE            
     BSR     DECORATE        ;BRANCH TO DECORATE SUBROUTINE
-    BSR     DRAW_BOARD      ;BRANCH TO DRAW BOARD    
+    
     LEA     DRAW_MSG,A1     ;ASSIGN MESSAGE TO ADDRESS REGISTER A1     
     MOVE.B  #14,D0          ;MOVE LITERAL 14 TO DO
     TRAP    #15             ;TRAP AND INTERPRET VALUE IN D0
+    
+    BSR     ENDL
+    
+    BSR     DRAW_BOARD      ;BRANCH TO DRAW BOARD    
+
     BSR     DECORATE        ;BRANCH TO DECORATE SUBROUTINE
     RTS                     ;RETURN FROM DRAW: SUBROUTINE
 
 *-------------------------------------------------------
-*--------------------POTIONS: OVERWRITTEN!---------------------
-*--------------------GET_ROW: ASK PLAYER FOR ROW(1-5----------- 
+*---GET_ROW: ASK PLAYER FOR ROW (1-5) WITH VALIDATION--
 *------------------------------------------------------- 
 POTIONS:
     BSR     ENDL            ;BRANCH TO ENDL SUBROUTINE
@@ -205,22 +298,33 @@ POTIONS:
     MOVE.B  #4,  D0         ;READ NUMBER INTO D1
     TRAP    #15
     
+    CMP.B   #1, D1          ;IS D1 < 1?
+    BLT     ROW_INVALID   ;YES -> INVALID
+    CMP.B   #5, D1          ;IS D1 > 5?
+    BGT     ROW_INVALID   ;YES -> INVALID
+    
     SUB.B   #1, D1          ;CONVERT 1-5 TO 0-4 (FOR THE ARRAY INDEX)
     MOVE.B  D1, SHOT_ROW    ;SAVE IT
+    SUB.B   #1, SHOTS_LEFT  ;SUBTRACT 1 SHOT 
     RTS
 
 *-------------------------------------------------------
-*-------------------------WEAPONS-----------------------
-* GET_COL: ASK PLAYER FOR COL (1-5)
+*---GET_COL: ASK PLAYER FOR COL (1-5) WITH VALIDATION--
 *-------------------------------------------------------   
 WEAPONS:
     BSR     ENDL            ;BRANCH TO ENDL SUBROUTINE
     LEA     WEAPONS_MSG,A1  ;"Enter Col to fire (1-5)
     MOVE.B  #14, D0
     TRAP    #15
-    
     MOVE.B  #4, D0          ;READ NUMBER INTO D1
     TRAP    #15
+    
+    CMP.B   #1, D1          ;IS D1 < 1?
+    BLT     COL_INVALID     ;YES -> INVALID
+    CMP.B   #5, D1          ;IS D1 > 5
+    BGT     COL_INVALID     ;YES -> INVALID
+    
+
     
     SUB.B   #1, D1          ;CONVERT 1-5 TO 0-4
     MOVE.B  D1, SHOT_COL    ;SAVE IT
@@ -231,12 +335,19 @@ WEAPONS:
 *------------------------------------------------------- 
 GAMEPLAY:
     BSR     ENDL            ;BRANCH TO ENDL SUBROUTINE
-    BSR     DECORATE        ;BRANCH TO DECORATE SUBROUTINE
-    LEA     GAMEPLAY_MSG,A1 ;ASSIGN MESSAGE TO ADDRESS REGISTER A1
-
-    BSR     DECORATE        ;BRANCH TO DECORATE SUBROUTINE
+    BSR     DECORATE        ;BRANCH TO DECORATE SUBROUTINE            
     BSR     COLLISION       ;BRANCH TO COLLISION SUBROUTINE
+   
+    MOVE.B  SHOT_VALID, D0  ;WAS IT A REAL SHOT?
+    CMP.B   #0, D0
+    BEQ     GAMEPLAY_DONE   ;NO, SKIP WIN/LOSE CHECK
+    
+    BSR     CHECK_WIN       ;CHECK IF WIN FIRST
+    BSR     CHECK_LOSE      ;THEN CHECK IF LOSE
     RTS                     ;RETURN FROM GAMEPLAY: SUBROUTINE
+
+GAMEPLAY_DONE:
+    RTS
 
 *-------------------------------------------------------
 *-----------------HEADS UP DISPLAY (SCORE)--------------
@@ -247,10 +358,19 @@ HUD:
     LEA     HUD_MSG,A1      ;ASSIGN MESSAGE TO ADDRESS REGISTER A1
     MOVE.B  #14,D0          ;MOVE LITERAL 14 TO DO
     TRAP    #15             ;TRAP AND INTERPRET VALUE IN D0
-    MOVE.B  (A3),D1         ;RETRIEVE THE VALUE A3 POINT TO AND MOVE TO D1
+    MOVE.B  SHIPS_LEFT ,D1  ;READ SHIPT_LEFT 
     MOVE.B  #3,D0           ;MOVE LITERAL 3 TO DO    
-    TRAP    #15               
-    BSR     DECORATE        ;BRANCH TO DECORATE SUBROUTINE    
+    TRAP    #15 
+    BSR     ENDL
+    
+    LEA     SHOTS_MSG, A1   ;SHOTS REMAINING
+    MOVE.B  #14, D0
+    TRAP    #15
+    MOVE.B  SHOTS_LEFT, D1 
+    MOVE.B  #3, D0          
+    TRAP    #15
+    BSR     DECORATE
+   
     RTS                     
 
 *-------------------------------------------------------
@@ -270,9 +390,23 @@ COLLISION:
     
     MOVE.B  (A0, D0), D2    ;D2 = BOARD[OFFSET]
     
+    MOVE.B  #1, SHOT_VALID  ;ASSUME VALID
+    CMP.B   #2, D2          ;ALREADY A HIT?
+    BEQ     ALREADY_SHOT
+    CMP.B   #3, D2          ;ALREADY A MISS?
+    BEQ     ALREADY_SHOT
+    
     CMP.B   #1, D2          ;IS IT A SHIP?
     BEQ     REAL_HIT        ;YES -> HIT!
     BRA     REAL_MISS       ;NO -> MISS!
+    
+ALREADY_SHOT:
+    MOVE.B  #0, SHOT_VALID  ;MARK AS INVALID
+    LEA     ALREADY_MSG, A1
+    MOVE.B  #14, D0
+    TRAP    #15
+    ADD.B   #1, SHOTS_LEFT  ;GIVE THE SHOT BACK, DIDN'T COUNT
+    RTS
     
 REAL_HIT:
     MOVE.B  #2, (A0, D0)    ;MARK BOARD[OFFSET] = 2 [HIT]
@@ -289,17 +423,6 @@ REAL_MISS:
     TRAP    #15
     RTS
 
-*-------------------------------------------------------
-*--------------------------LOOP-------------------------
-*-------------------------------------------------------
-LOOP:
-    MOVE.B  #5, D3          ;LOOP COUNTER D3=5
-NEXT:
-    LEA     LOOP_MSG,A1     ;ASSIGN MESSAGE TO ADDRESS REGISTER A1
-    MOVE.B  #14,D0          ;MOVE LITERAL 14 TO DO          
-    TRAP    #15             ;TRAP AND INTERPRET VALUE IN D0
-    SUB     #1,D3           ;DECREMENT LOOP COUNTER
-    BNE     NEXT            ;REPEAT UNTIL D0=0
 
 *-------------------------------------------------------
 *------------------SCREEN DECORATION--------------------
@@ -375,7 +498,7 @@ WELCOME_MSG:    DC.B    '*******************************************************
 POTIONS_MSG:    DC.B    'Enter ROW to fire (1-5): ',0
 WEAPONS_MSG:    DC.B    'Enter COL to fire (1-5):',0
 GAMEPLAY_MSG:   DC.B    'Enter coordinates to fire cannons!',0
-UPDATE_MSG:     DC.B    'Preparing battle status...',0
+UPDATE_MSG:     DC.B    '--------------- BATTLE STATUS UPDATE ----------------',0
 DRAW_MSG:       DC.B    'NAVAL GRID - NORTH ATLANTIC 1588...',0
 
 HIT_MSG:        DC.B    '*** DIRECT HIT! A ship has been struck! ***',0
@@ -385,7 +508,13 @@ LOOP_MSG:       DC.B    '.',0
 REPLAY_MSG:     DC.B    'ENTER 0 TO QUIT, ANY OTHER NUMBER TO REPLAY: ',0
 CONTINUE_MSG:   DC.B    'PRESS ANYKEY TO CONTINUE: ',0
 
-HUD_MSG:        DC.B    'CANNON HITS REMAINING: ',0
+HUD_MSG:        DC.B    'SHIPS REMAINING: ',0
+SHOTS_MSG:      DC.B    'CANNON SHOTS REMAINING: ',0
+WIN_MSG: DC.B  '*** SPAIN PREVAILS! ALL ENGLISH SHIPS SUNK! ***',0
+LOSE_MSG: DC.B  '*** ENGLAND WINS! THE ARMADA SURVIVES! ***',0
+
+INVALID_MSG:    DC.B    'INVALID! Enter a number between 1 and 5: ',0
+ALREADY_MSG:    DC.B    'You already fired there! Shot returned.',0
 
 *---------------------------------------------------
 * GAME BOARD - 5x5 GRID (25 BYTES)
@@ -393,6 +522,8 @@ HUD_MSG:        DC.B    'CANNON HITS REMAINING: ',0
 *---------------------------------------------------
 
 BOARD:          DS.B    25  ; RESERVE 25 BYTES FOR THE GRID
+GRID_HEADER:    DC.B    '  1  2  3  4  5 ',0
+ROW_NUMS:       DC.B    '1','2','3','4','5'
 
 *---------------------------------------------------
 * SHIP POSITIONS (ROW, COL) PAIRS - 3 SHIPS
@@ -413,8 +544,9 @@ SHIPS_LEFT:     DC.B    3   ;SHIPS STILL ALIVE
 SHOT_ROW:       DS.B    1   ;PLAYER'S CHOSEN ROW
 SHOT_COL:       DS.B    1   ;PLAYER'S CHOSEN COLUMN
 
-HEALTH:         DS.W    1   ;PLAYERS HEALTH
-SCORE:          DS.W    1   ;RESERVE SPACE FOR SCORE
+SHOTS_LEFT:     DC.B    10  ;PLAYER HAS 10 CANNON SHOTS
+SHOT_VALID:     DC.B    1   ; 1 = VALID SHOT, 0 = ALREADY SHOT
+
 
 
 *-----------OCEAN SYMBOLS-----------
@@ -429,4 +561,6 @@ CELL_MISS:      DC.B  '[0]',0
 *~Font size~10~
 *~Tab type~1~
 *~Tab size~4~
+
+
 
