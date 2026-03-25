@@ -9,7 +9,7 @@ SRC_DIR     := ./src
 
 TARGET      := ${BUILD_DIR}/sampleapp.bin
 
-SRC         := ${SRC_DIR}/introduction/lesson_01/main.c
+SRC         := ${SRC_DIR}/main.c
 
 all         := build
 
