@@ -17,3 +17,10 @@ section .data
 	SHIPS_LEFT:			db 3
 	SHOTS_LEFT:			db 10
 	SHOT_VALID:			db 1
+
+section .bss
+	BOARD:					resb 25
+	SHOT_ROW: 			resb 1
+	SHOT_COL:				resb 1
+	INPUT_BUF:			resb 16 	; buffer for reading user input
+	
