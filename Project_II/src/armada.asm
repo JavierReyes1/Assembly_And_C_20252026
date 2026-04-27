@@ -28,6 +28,8 @@ init:
 	add eax, ecx
 	mov byte [rdi+rax], 1
 
+	ret
+
 section .data
 	CRLF:						db 0x0D, 0x0A, 0
 	WELCOME_MSG:		db '************************************************************', 0x0D, 0x0A
