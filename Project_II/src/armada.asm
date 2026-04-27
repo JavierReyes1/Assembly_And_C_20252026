@@ -17,7 +17,7 @@ init:
 	movzx eax, byte [SHIP2_ROW]
 	imul eax, 5
 	movzx ecx, byte [SHIP2_COL]
-	add eax, exc
+	add eax, ecx
 	mov byte [rdi+rax], 1
 
 section .data
