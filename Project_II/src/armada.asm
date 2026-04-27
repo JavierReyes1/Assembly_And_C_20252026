@@ -19,6 +19,14 @@ init:
 	movzx ecx, byte [SHIP2_COL]
 	add eax, ecx
 	mov byte [rdi+rax], 1
+	
+	;Place ship 3
+	lea rdi, [BOARD]
+	movzx eax, byte [SHIP3_ROW]
+	imul eax, 5
+	movzx ecx, byte [SHIP3_COL]
+	add eax, ecx
+	mov byte [rdi+rax], 1
 
 section .data
 	CRLF:						db 0x0D, 0x0A, 0
