@@ -30,6 +30,67 @@ init:
 
 	ret
 
+;Draw the board: print the 5x5 grid
+draw_board:
+	push rbx
+	push r12
+	push r13
+	push r14
+
+	;print column header "1 2 3 4 5"
+	lea rdi, [GRID_HEADER]
+	call print_string
+	call print_newline
+
+	lea r12, [BORAD]			;r12 = pointer to board
+	mov r13b, 0						;r12 = row counter (0-4)
+
+.row_loop:
+	;print row number (1-5)
+	movzx edi, r13b
+	add 	edi, 1 		;convert 0-4 to 1-5
+	call print_number
+
+	mov r14b, 0 		;r14 = col counter 0-4
+
+.col_loop:
+	movzx eax, r13b
+	imul  eax, 5
+	movzx ecx, r14b
+	add   eax, ecx
+
+.print_ocean:
+	lea		rdi, [CELL_OCEAN]
+	call print_string
+	jmp		.next_col
+	
+.print_hit:
+	lea  rdi, [CELL_HIT]
+	call 	print_string
+	jmp   .next_col
+
+.print_miss:
+	lea  rdi, [CELL_MISS]
+	call print_string
+
+.next_col:
+	inc		r14b 		;col++
+	cmp   r14b, 5
+	jl 		.col_loop		;repeat for 5 colums
+
+	call 	print_newline 	;end of row
+	inc 	r13b		;row++
+	cmp 	r13b, 5
+	jl 		.row_loop
+
+	pop 	r14			;restore callee-saved registers
+	pop   r13
+	pop   r12
+	pop   rbx
+	ret
+
+
+
 section .data
 	CRLF:						db 0x0D, 0x0A, 0
 	WELCOME_MSG:		db '************************************************************', 0x0D, 0x0A
@@ -49,6 +110,13 @@ section .data
 	SHIPS_LEFT:			db 3
 	SHOTS_LEFT:			db 10
 	SHOT_VALID:			db 1
+	
+	GRID_HEADER:		db ' 1  2  3  4  5 ',0
+	ROW_NUMS: 			db '1','2','3','4','5'
+	CELL_OCEAN:			db '[~]',0
+	CELL_HIT:				db '[X]',0
+	CELL_MISS:			db '[0]',0
+
 
 	fmt_int: db '%d', 0
 	fmt_scan: db '%d', 0
@@ -78,6 +146,12 @@ print_number:
 	mov esi, edi
 	xor rax, rax
 	call printf
+	ret
+
+;print new line
+print_newline:
+	lea rdi, [CRLF]
+	call print_string
 	ret
 
 ; read_number: reads integer, returns in eax
