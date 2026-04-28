@@ -1,7 +1,7 @@
 init:
 	lea rdi, [BOARD]
 	xor al, al		;since both inputs are the same, the result will be 0
-	mov rxc, 25		;25 cells to clear
+	mov rcx, 25		;25 cells to clear
 	rep stosb 		;fill [RDI] with AL, 25 times. stosb mean "store byte". It takes the value in al and writes it to the memory address pointed to by rdi
 								;Then automatically increments rdi by 1. rep means repeat, so it will repeat the instruction that follows it rxc times
 	;Place ship 1
@@ -9,7 +9,7 @@ init:
 	movzx eax, byte [SHIP1_ROW]   ;movzx (move with zero-extend) 
 	imul eax, 5										;ROW * 5
 	movzx ecx, byte [SHIP1_COL]
-	add eax, exc
+	add eax, ecx
 	mov byte [rdi + rax], 1 ; BOARD[offset] = 1 (SHIP)
 
 	;Place ship 2
