@@ -385,9 +385,23 @@ gameloop:
 	ret
 
 ;----------------------------------
+;---------MAIN--------------------
 ;----------------------------------
-;----------------------------------
+main:
+	push 		rbp
+	mov 		rbp, rsp
 
+	call 		init
+	call 		welcome
+	call 		gameloop
+
+	mov 		eax, 0
+	pop 		rbp
+	ret
+
+;----------------------------------
+;---------SECTIONS--------------------
+;----------------------------------
 section .data
 	CRLF:						db 0x0D, 0x0A, 0
 	WELCOME_MSG:		db '************************************************************', 0x0D, 0x0A
@@ -409,6 +423,11 @@ section .data
 	HUD_MSG:    db 'SHIPS REMAINING: ', 0
 	SHOTS_MSG:  db 'CANNON SHOTS REMAINING: ', 0
 
+	UPDATE_MSG:     db '--------------- BATTLE STATUS UPDATE ----------------', 0
+	DRAW_MSG:       db 'NAVAL GRID - NORTH ATLANTIC 1588...', 0
+	LOOP_MSG:       db '.', 0
+	REPLAY_MSG:     db 'ENTER 0 TO QUIT, ANY OTHER NUMBER TO REPLAY: ', 0
+	CONTINUE_MSG:   db 'PRESS ANY KEY TO CONTINUE: ', 0
 
 	SHIP1_ROW:			db 0
 	SHIP1_COL:			db 0
