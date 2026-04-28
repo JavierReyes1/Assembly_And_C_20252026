@@ -90,6 +90,55 @@ draw_board:
 	ret
 
 
+collision:
+	push 	rbx
+
+	lea		rbx, [BOARD] ;RBX = board pointer
+
+	;calculate offset = (row*5) + col
+	movzx	eax, byte [SHOT_ROW]
+	imul  eax, 5
+
+	movzx ecx, byte [SHOT_COL]
+	add 	eax, ecx 		;eax = offset
+
+	movzx edx, byte[rbx + rax] ;edx = cell valua at that position
+
+	mov  byte [SHOT_VALID], 1  ;assume valid shot
+
+	cmp  dl, 2 							;already a hit?
+	je	.already_shot 		
+	cmp dl, 3							;already a miss?
+	je 	.already_shot
+
+	cmp dl, 1 		;is it a ship?
+	je	.real_hit
+	jmp .real_miss ;otherwise it's ocean
+
+.already_shot:
+	mov		byte[SHOT_VALID], 0 ;mark as invalid
+	lea		rdi, [ALREADY_MSG]
+	call 	print_string
+	add 	byte [SHOT_LEFT],1 ;give the shot back
+	jmp		.collision_done
+
+.real_hit:
+	mov 	byte [rbx + rax], 2  ;mark cell as HIT 
+	sub 	byte [SHIPS_LEFT], 1 ; one less ship
+	lea   rdi, [HIT_MSG]
+	call print_string
+	jmp		.collision_done
+	
+.real_miss:
+	mov 	byte[rbx + rax], 3 ;mark cell as miss
+	lea 	rdi, [MISS_MSG]
+	call 	print_string
+
+.collision_done:
+	pop		rbx
+	ret
+
+
 
 section .data
 	CRLF:						db 0x0D, 0x0A, 0
@@ -97,6 +146,9 @@ section .data
 									db '		SPAIN vs ENGLAND - NAVAL BATTLE 1588', 0x0D, 0x0A
 									db '	The Spanish Armada faces the English Fleet', 0x0D, 0x0A
 									db '************************************************************', 0x0D, 0x0A, 0
+	ALREADY_MSG:    db 'You already fired there! Shot returned.', 0
+	HIT_MSG:        db '*** DIRECT HIT! A ship has been struck! ***', 0
+	MISS_MSG:       db '... Cannonball splashes into the sea. MISS!', 0
 
 	SHIP1_ROW:			db 0
 	SHIP1_COL:			db 0
