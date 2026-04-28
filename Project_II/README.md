@@ -108,3 +108,9 @@ Calculator/
 - GCC (linker)
 - GDB (debugger - used this a LOT for finding segfaults)
 - linux terminal
+
+
+
+https://github.com/user-attachments/assets/c828ddab-d60e-47ae-ae4b-4d65cb15a54f
+
+
