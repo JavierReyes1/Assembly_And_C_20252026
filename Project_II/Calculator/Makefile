@@ -11,8 +11,9 @@ calculator: src/calculator.o
 src/calculator.o: src/calculator.asm
 	$(ASM) $(ASMFLAGS) -o src/calculator.o src/calculator.asm
 
-test: tests/test_calculator.c src/calculator.o
-	$(CC) $(CFLAGS) -o test_calculator tests/test_calculator.c src/calculator.o
+test: tests/test_calculator.c src/register_adder.asm
+	$(ASM) $(ASMFLAGS) -o src/register_adder.o src/register_adder.asm
+	$(CC) $(CFLAGS) -o test_calculator tests/test_calculator.c src/register_adder.o
 	./test_calculator
 
 clean:

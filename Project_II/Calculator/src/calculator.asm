@@ -21,6 +21,7 @@ extern exit
 
 section .text
 global main
+global register_adder  ;expose for C testing
 
 print_string:
     push    rbx                 ; align stack (1 push + ret = 2 = even)
