@@ -67,31 +67,40 @@ global main									; entry point when linking with gcc
 
 ; print_string: print null-terminated string pointed to by rdi
 print_string:
+	sub rsp, 8
 	xor	rax, rax							; 0 float args for printf
 	call printf
+	add rsp, 8
 	ret
 
 ; print_number: print integer in edi
 print_number:
+	sub rsp, 8
 	lea rdi, [fmt_int]
 	mov esi, edi
 	xor rax, rax
 	call printf
+	add rsp, 8
 	ret
 
 ;print new line
 print_newline:
+	sub rsp, 8
 	lea rdi, [CRLF]
-	call print_string
+	xor rax, rax
+	call printf
+	add rsp, 8
 	ret
 
 ; read_number: reads integer, returns in eax
 read_number:
+	sub rsp, 8
 	lea rdi, [fmt_scan]
 	lea rsi, [INPUT_BUF]
 	xor rax, rax
 	call scanf
 	mov eax, [INPUT_BUF]
+	add rsp, 8
 	ret
 
 ;--------------------------------
