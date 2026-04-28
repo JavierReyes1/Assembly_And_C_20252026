@@ -1,3 +1,4 @@
+default rel  ;This tells nasm to use relative addresssing by default
 ;----------------------------------
 ;---------SECTIONS--------------------
 ;----------------------------------
