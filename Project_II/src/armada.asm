@@ -357,8 +357,21 @@ gameplay:
 	ret
 
 ;----------------------------------
+;------REPLAY---------------------
 ;----------------------------------
-;----------------------------------
+
+replay:
+	call 		print_newline
+	lea 		rdi, [REPLAY_MSG]
+	call 		print_string
+	call 		print_newline
+
+	cmp 		eax, 0
+	je 			end_game
+	call 		game_loop
+	ret
+
+
 	
 ;----------------------------------
 ;----------------------------------
