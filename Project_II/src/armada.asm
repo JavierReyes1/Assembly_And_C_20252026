@@ -89,6 +89,9 @@ draw_board:
 	pop   rbx
 	ret
 
+;----------------------------------
+;----------COLLISION----------------
+;----------------------------------
 
 collision:
 	push 	rbx
@@ -139,7 +142,77 @@ collision:
 	ret
 
 
+;----------------------------------
+;----------POTIONS-----------------
+;----------------------------------
 
+potions:
+	call print_newline
+	lea 	rdi, [POTIONS_MSG]
+	call print_string
+	call read_number 	;result in eax
+
+	cmp 	eax, 1 		;is it < 1?
+	jl 		.row_invalid
+	cmp 	eax, 5 		;is it > 5?
+	jg 		.row_invalid
+
+	sub 	eax, 1 		;convert 1-5 to 0-4 for array index 
+	mov 	byte[SHOT_ROW], al ; save it 
+	sub 	byte[SHOTS_LEFT], 1
+	ret 
+
+.row_invalid:
+	lea 	rdi, [INVALID_MSG]
+	call print_string
+	jmp potions 		;ask again (loop back)
+
+
+
+;----------------------------------
+;----------WEAPONS-----------------
+; ask player for col 1-5, validates input
+;----------------------------------
+
+weapons:
+	call print_newline
+	lea 	rdi, [WEAPONS_MSG]
+	call print_string
+	call read_number 		;result in eax
+
+	cmp 	eax, 1
+	jl 		.col_invalid
+	cmp 	eax, 5
+	jg 		.col_invalid
+
+	sub 	eax, 1 		;conver 1-5 to 0-4
+	mov 	byte [SHOT_COL], al
+	ret
+
+.col_invalid:
+	lea 	rdi, [INVALID_MSG]
+	call print_string
+	jmp 	weapons 		;ask again
+
+
+
+;----------------------------------
+;- INPUT: calls both potions and weapons
+;----------------------------------
+
+input: 
+	call print_newline
+	lea 	rdi, [GAMEPLAY_MSG]
+	call 	print_string
+	call potions
+	call print_newline
+	call weapons
+	ret
+
+
+;----------------------------------
+;----------------------------------
+;----------------------------------
 section .data
 	CRLF:						db 0x0D, 0x0A, 0
 	WELCOME_MSG:		db '************************************************************', 0x0D, 0x0A
@@ -149,6 +222,11 @@ section .data
 	ALREADY_MSG:    db 'You already fired there! Shot returned.', 0
 	HIT_MSG:        db '*** DIRECT HIT! A ship has been struck! ***', 0
 	MISS_MSG:       db '... Cannonball splashes into the sea. MISS!', 0
+
+	POTIONS_MSG:    db 'Enter ROW to fire (1-5): ', 0
+	WEAPONS_MSG:    db 'Enter COL to fire (1-5): ', 0
+	GAMEPLAY_MSG:   db 'Enter coordinates to fire cannons!', 0
+	INVALID_MSG:    db 'INVALID! Enter a number between 1 and 5: ', 0
 
 	SHIP1_ROW:			db 0
 	SHIP1_COL:			db 0
@@ -173,6 +251,9 @@ section .data
 	fmt_int: db '%d', 0
 	fmt_scan: db '%d', 0
 
+;----------------------------------
+;----------------------------------
+;----------------------------------
 section .bss
 	BOARD:					resb 25
 	SHOT_ROW: 			resb 1
