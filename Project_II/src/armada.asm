@@ -316,8 +316,15 @@ decorate:
 	pop 		rbx
 	ret
 ;----------------------------------
+;----------UPDATE--------------
 ;----------------------------------
-;----------------------------------
+update:	
+	call 		print_newline
+	call 		decorate
+	lea 		rdi, [UPDATE_MSG]
+	call 		print_string
+	call 		decorate
+	ret
 
 ;----------------------------------
 ;----------------------------------
