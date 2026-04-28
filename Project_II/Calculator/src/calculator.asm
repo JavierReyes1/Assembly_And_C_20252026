@@ -63,3 +63,13 @@ read_number:
     mov     eax, [INPUT_BUF]
     add     rsp, 8
     ret
+
+;-------------------------------------------------------
+; register_adder: Add two numbers via registers
+; Input:  EDI = first number, ESI = second number
+; Output: EAX = EDI + ESI
+
+register_adder:
+    mov     eax, edi
+    add     eax, esi
+    ret
