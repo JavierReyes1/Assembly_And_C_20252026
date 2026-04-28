@@ -289,13 +289,32 @@ welcome:
 	ret
 
 ;----------------------------------
+;----CONTINUE_PROMPT-------
 ;----------------------------------
-;----------------------------------
+continue_prompt:
+	call 		print_newline
+	lea 		rdi, [CONTINUE_MSG]
+	call 		print_string
+	call 		read_number
+	ret
 
 ;----------------------------------
+;-----DECORATE ------------------
 ;----------------------------------
-;----------------------------------
+decorate:
+	push 		rbx,
+	call 		print_newline
+	mov 		rbx, 60
 
+.dot_loop:
+	lea 		rdi, [LOOP_MSG]
+	call 		print_string
+	dec 		rbx
+	jne 		.dot_loop
+
+	call 		print_newline
+	pop 		rbx
+	ret
 ;----------------------------------
 ;----------------------------------
 ;----------------------------------
