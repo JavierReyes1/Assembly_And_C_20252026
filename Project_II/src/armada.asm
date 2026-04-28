@@ -327,8 +327,18 @@ update:
 	ret
 
 ;----------------------------------
+;---------DRAW---------------------
 ;----------------------------------
-;----------------------------------
+draw:
+ 	call 		print_newline
+	call 		decorate 	
+	lea 		rdi, [DRAW_MSG]
+	call 		print_string
+	call 		print_newline
+	call 		draw_board
+	call 		decorate
+	ret
+	
 
 ;----------------------------------
 ;----------------------------------
