@@ -209,10 +209,35 @@ input:
 	call weapons
 	ret
 
+;----------------------------------
+;CHECK_WIN did the player sink all ships?
+;----------------------------------
+
+check_win:
+	cmp 	byte[SHIPS_LEFT], 0
+	je 		.player_wins
+	ret
+
+.player_wins:
+	call 		print_newline
+	call 		decorate
+	lea			rdi, [WIN_MSG]
+	call 		print_string
+	call 		decorate
+	call 		print_newline
+	jmp 		end_game
+
+
+;----------------------------------
+; CHECK_LOSE did the player run out of shots?
+;----------------------------------
+
+
 
 ;----------------------------------
 ;----------------------------------
 ;----------------------------------
+
 section .data
 	CRLF:						db 0x0D, 0x0A, 0
 	WELCOME_MSG:		db '************************************************************', 0x0D, 0x0A
