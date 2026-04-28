@@ -232,7 +232,28 @@ check_win:
 ; CHECK_LOSE did the player run out of shots?
 ;----------------------------------
 
+check_lose:
+	cmp 	byte[SHOTS_LEFT], 0
+	je		.player_loses
+	ret
 
+.player_loses:
+	call print_newline
+	call decorate
+	lea 	rdi, [LOSE_MSG]
+	call 	print_string
+	call 	decorate
+	call 	print_newline
+	jmp		end_game
+
+;----------------------------------
+;---END_GAME exit the program------
+;----------------------------------
+
+
+;----------------------------------
+;----------------------------------
+;----------------------------------
 
 ;----------------------------------
 ;----------------------------------
