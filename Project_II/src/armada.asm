@@ -1,3 +1,102 @@
+;----------------------------------
+;---------SECTIONS--------------------
+;----------------------------------
+section .data
+	CRLF:						db 0x0D, 0x0A, 0
+	WELCOME_MSG:		db '************************************************************', 0x0D, 0x0A
+									db '		SPAIN vs ENGLAND - NAVAL BATTLE 1588', 0x0D, 0x0A
+									db '	The Spanish Armada faces the English Fleet', 0x0D, 0x0A
+									db '************************************************************', 0x0D, 0x0A, 0
+	ALREADY_MSG:    db 'You already fired there! Shot returned.', 0
+	HIT_MSG:        db '*** DIRECT HIT! A ship has been struck! ***', 0
+	MISS_MSG:       db '... Cannonball splashes into the sea. MISS!', 0
+
+	POTIONS_MSG:    db 'Enter ROW to fire (1-5): ', 0
+	WEAPONS_MSG:    db 'Enter COL to fire (1-5): ', 0
+	GAMEPLAY_MSG:   db 'Enter coordinates to fire cannons!', 0
+	INVALID_MSG:    db 'INVALID! Enter a number between 1 and 5: ', 0
+
+	WIN_MSG:    db '*** SPAIN PREVAILS! ALL ENGLISH SHIPS SUNK! ***', 0
+	LOSE_MSG:   db '*** ENGLAND WINS! THE ARMADA SURVIVES! ***', 0
+
+	HUD_MSG:    db 'SHIPS REMAINING: ', 0
+	SHOTS_MSG:  db 'CANNON SHOTS REMAINING: ', 0
+
+	UPDATE_MSG:     db '--------------- BATTLE STATUS UPDATE ----------------', 0
+	DRAW_MSG:       db 'NAVAL GRID - NORTH ATLANTIC 1588...', 0
+	LOOP_MSG:       db '.', 0
+	REPLAY_MSG:     db 'ENTER 0 TO QUIT, ANY OTHER NUMBER TO REPLAY: ', 0
+	CONTINUE_MSG:   db 'PRESS ANY KEY TO CONTINUE: ', 0
+
+	SHIP1_ROW:			db 0
+	SHIP1_COL:			db 0
+	
+	SHIP2_ROW:			db 2
+	SHIP2_COL:			db 3
+	
+	SHIP3_ROW:			db 4
+	SHIP3_COL:			db 1
+
+	SHIPS_LEFT:			db 3
+	SHOTS_LEFT:			db 10
+	SHOT_VALID:			db 1
+	
+	GRID_HEADER:		db ' 1  2  3  4  5 ',0
+	ROW_NUMS: 			db '1','2','3','4','5'
+	CELL_OCEAN:			db '[~]',0
+	CELL_HIT:				db '[X]',0
+	CELL_MISS:			db '[0]',0
+
+
+	fmt_int: db '%d', 0
+	fmt_scan: db '%d', 0
+
+section .bss
+	BOARD:					resb 25
+	SHOT_ROW: 			resb 1
+	SHOT_COL:				resb 1
+	INPUT_BUF:			resb 16 	; buffer for reading user input
+	
+extern printf
+extern scanf
+extern putchar
+
+section .text
+global main									; entry point when linking with gcc
+
+; print_string: print null-terminated string pointed to by rdi
+print_string:
+	xor	rax, rax							; 0 float args for printf
+	call printf
+	ret
+
+; print_number: print integer in edi
+print_number:
+	lea rdi, [fmt_int]
+	mov esi, edi
+	xor rax, rax
+	call printf
+	ret
+
+;print new line
+print_newline:
+	lea rdi, [CRLF]
+	call print_string
+	ret
+
+; read_number: reads integer, returns in eax
+read_number:
+	lea rdi, [fmt_scan]
+	lea rsi, [INPUT_BUF]
+	xor rax, rax
+	call scanf
+	mov eax, [INPUT_BUF]
+	ret
+
+;--------------------------------
+;--------INIT--------------------
+;--------------------------------
+
 init:
 	lea rdi, [BOARD]
 	xor al, al		;since both inputs are the same, the result will be 0
@@ -42,7 +141,7 @@ draw_board:
 	call print_string
 	call print_newline
 
-	lea r12, [BORAD]			;r12 = pointer to board
+	lea r12, [BOARD]			;r12 = pointer to board
 	mov r13b, 0						;r12 = row counter (0-4)
 
 .row_loop:
@@ -58,6 +157,12 @@ draw_board:
 	imul  eax, 5
 	movzx ecx, r14b
 	add   eax, ecx
+	movzx eax, byte [r12 + rax] ;read cell value
+
+	cmp 	al, 2 		;check hit
+	je 		.print_hit
+	cmp 	al, 3 		;check miss
+	je 		.print_miss
 
 .print_ocean:
 	lea		rdi, [CELL_OCEAN]
@@ -122,7 +227,7 @@ collision:
 	mov		byte[SHOT_VALID], 0 ;mark as invalid
 	lea		rdi, [ALREADY_MSG]
 	call 	print_string
-	add 	byte [SHOT_LEFT],1 ;give the shot back
+	add 	byte [SHOTS_LEFT],1 ;give the shot back
 	jmp		.collision_done
 
 .real_hit:
@@ -302,7 +407,7 @@ continue_prompt:
 ;-----DECORATE ------------------
 ;----------------------------------
 decorate:
-	push 		rbx,
+	push 		rbx
 	call 		print_newline
 	mov 		rbx, 60
 
@@ -364,7 +469,7 @@ replay:
 	call 		print_newline
 	lea 		rdi, [REPLAY_MSG]
 	call 		print_string
-	call 		print_newline
+	call 		print_number
 
 	cmp 		eax, 0
 	je 			end_game
@@ -400,101 +505,6 @@ main:
 	ret
 
 ;----------------------------------
-;---------SECTIONS--------------------
-;----------------------------------
-section .data
-	CRLF:						db 0x0D, 0x0A, 0
-	WELCOME_MSG:		db '************************************************************', 0x0D, 0x0A
-									db '		SPAIN vs ENGLAND - NAVAL BATTLE 1588', 0x0D, 0x0A
-									db '	The Spanish Armada faces the English Fleet', 0x0D, 0x0A
-									db '************************************************************', 0x0D, 0x0A, 0
-	ALREADY_MSG:    db 'You already fired there! Shot returned.', 0
-	HIT_MSG:        db '*** DIRECT HIT! A ship has been struck! ***', 0
-	MISS_MSG:       db '... Cannonball splashes into the sea. MISS!', 0
-
-	POTIONS_MSG:    db 'Enter ROW to fire (1-5): ', 0
-	WEAPONS_MSG:    db 'Enter COL to fire (1-5): ', 0
-	GAMEPLAY_MSG:   db 'Enter coordinates to fire cannons!', 0
-	INVALID_MSG:    db 'INVALID! Enter a number between 1 and 5: ', 0
-
-	WIN_MSG:    db '*** SPAIN PREVAILS! ALL ENGLISH SHIPS SUNK! ***', 0
-	LOSE_MSG:   db '*** ENGLAND WINS! THE ARMADA SURVIVES! ***', 0
-
-	HUD_MSG:    db 'SHIPS REMAINING: ', 0
-	SHOTS_MSG:  db 'CANNON SHOTS REMAINING: ', 0
-
-	UPDATE_MSG:     db '--------------- BATTLE STATUS UPDATE ----------------', 0
-	DRAW_MSG:       db 'NAVAL GRID - NORTH ATLANTIC 1588...', 0
-	LOOP_MSG:       db '.', 0
-	REPLAY_MSG:     db 'ENTER 0 TO QUIT, ANY OTHER NUMBER TO REPLAY: ', 0
-	CONTINUE_MSG:   db 'PRESS ANY KEY TO CONTINUE: ', 0
-
-	SHIP1_ROW:			db 0
-	SHIP1_COL:			db 0
-	
-	SHIP2_ROW:			db 2
-	SHIP2_COL:			db 3
-	
-	SHIP3_ROW:			db 4
-	SHIP3_COL:			db 1
-
-	SHIPS_LEFT:			db 3
-	SHOTS_LEFT:			db 10
-	SHOT_VALID:			db 1
-	
-	GRID_HEADER:		db ' 1  2  3  4  5 ',0
-	ROW_NUMS: 			db '1','2','3','4','5'
-	CELL_OCEAN:			db '[~]',0
-	CELL_HIT:				db '[X]',0
-	CELL_MISS:			db '[0]',0
-
-
-	fmt_int: db '%d', 0
-	fmt_scan: db '%d', 0
-
 ;----------------------------------
 ;----------------------------------
-;----------------------------------
-section .bss
-	BOARD:					resb 25
-	SHOT_ROW: 			resb 1
-	SHOT_COL:				resb 1
-	INPUT_BUF:			resb 16 	; buffer for reading user input
-	
-extern printf
-extern scanf
-extern putchar
-
-section .text
-global main									; entry point when linking with gcc
-
-; print_string: print null-terminated string pointed to by rdi
-print_string:
-	xor	rax, rax							; 0 float args for printf
-	call printf
-	ret
-
-; print_number: print integer in edi
-print_number:
-	lea rdi, [fmt_int]
-	mov esi, edi
-	xor rax, rax
-	call printf
-	ret
-
-;print new line
-print_newline:
-	lea rdi, [CRLF]
-	call print_string
-	ret
-
-; read_number: reads integer, returns in eax
-read_number:
-	lea rdi, [fmt_scan]
-	lea rsi, [INPUT_BUF]
-	xor rax, rax
-	call scanf
-	mov eax, byte [INPUT_BUF]
-	ret
-
 
