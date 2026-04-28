@@ -368,14 +368,21 @@ replay:
 
 	cmp 		eax, 0
 	je 			end_game
-	call 		game_loop
+	call 		gameloop
 	ret
 
 
-	
 ;----------------------------------
+;-------GAMELOOP-------------------
 ;----------------------------------
-;----------------------------------
+gameloop:
+	call 		update
+	call 		draw
+	call 		input 
+	call 		gameplay
+	call 		hud
+	call 		replay
+	ret
 
 ;----------------------------------
 ;----------------------------------
