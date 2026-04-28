@@ -249,7 +249,10 @@ check_lose:
 ;----------------------------------
 ;---END_GAME exit the program------
 ;----------------------------------
-
+end_game:
+	mov 	eax, 0 	;return 0 (success)
+	pop 	rbp 		;if you set up a stack frame in main
+	ret 					;return to C runtine (calls exit)
 
 ;----------------------------------
 ;----------------------------------
@@ -273,6 +276,9 @@ section .data
 	WEAPONS_MSG:    db 'Enter COL to fire (1-5): ', 0
 	GAMEPLAY_MSG:   db 'Enter coordinates to fire cannons!', 0
 	INVALID_MSG:    db 'INVALID! Enter a number between 1 and 5: ', 0
+
+	WIN_MSG:    db '*** SPAIN PREVAILS! ALL ENGLISH SHIPS SUNK! ***', 0
+	LOSE_MSG:   db '*** ENGLAND WINS! THE ARMADA SURVIVES! ***', 0
 
 	SHIP1_ROW:			db 0
 	SHIP1_COL:			db 0
