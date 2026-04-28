@@ -42,7 +42,7 @@ section .data
 	SHOTS_LEFT:			db 10
 	SHOT_VALID:			db 1
 	
-	GRID_HEADER:		db ' 1  2  3  4  5 ',0
+	GRID_HEADER:		db '  1   2   3   4   5 ',0
 	ROW_NUMS: 			db '1','2','3','4','5'
 	CELL_OCEAN:			db '[~]',0
 	CELL_HIT:				db '[X]',0
@@ -61,6 +61,7 @@ section .bss
 extern printf
 extern scanf
 extern putchar
+extern exit
 
 section .text
 global main									; entry point when linking with gcc
@@ -76,8 +77,8 @@ print_string:
 ; print_number: print integer in edi
 print_number:
 	sub rsp, 8
-	lea rdi, [fmt_int]
 	mov esi, edi
+	lea rdi, [fmt_int]
 	xor rax, rax
 	call printf
 	add rsp, 8
@@ -262,6 +263,7 @@ collision:
 ;----------------------------------
 
 potions:
+	sub 	rsp, 8
 	call print_newline
 	lea 	rdi, [POTIONS_MSG]
 	call print_string
@@ -275,11 +277,13 @@ potions:
 	sub 	eax, 1 		;convert 1-5 to 0-4 for array index 
 	mov 	byte[SHOT_ROW], al ; save it 
 	sub 	byte[SHOTS_LEFT], 1
+	add  rsp, 8
 	ret 
 
 .row_invalid:
 	lea 	rdi, [INVALID_MSG]
 	call print_string
+	add  rsp, 8 		;restore stack before jumping back
 	jmp potions 		;ask again (loop back)
 
 
@@ -290,6 +294,7 @@ potions:
 ;----------------------------------
 
 weapons:
+	sub  rsp, 8
 	call print_newline
 	lea 	rdi, [WEAPONS_MSG]
 	call print_string
@@ -302,11 +307,13 @@ weapons:
 
 	sub 	eax, 1 		;conver 1-5 to 0-4
 	mov 	byte [SHOT_COL], al
+	add 	rsp, 8
 	ret
 
 .col_invalid:
 	lea 	rdi, [INVALID_MSG]
 	call print_string
+	add 	rsp, 8
 	jmp 	weapons 		;ask again
 
 
@@ -316,12 +323,14 @@ weapons:
 ;----------------------------------
 
 input: 
+	sub 	rsp, 8
 	call print_newline
 	lea 	rdi, [GAMEPLAY_MSG]
 	call 	print_string
 	call potions
 	call print_newline
 	call weapons
+	add 	rsp, 8
 	ret
 
 ;----------------------------------
@@ -334,6 +343,7 @@ check_win:
 	ret
 
 .player_wins:
+	sub 		rsp, 8
 	call 		print_newline
 	call 		decorate
 	lea			rdi, [WIN_MSG]
@@ -353,6 +363,7 @@ check_lose:
 	ret
 
 .player_loses:
+	sub 	rsp, 8
 	call print_newline
 	call decorate
 	lea 	rdi, [LOSE_MSG]
@@ -365,15 +376,15 @@ check_lose:
 ;---END_GAME exit the program------
 ;----------------------------------
 end_game:
-	mov 	eax, 0 	;return 0 (success)
-	pop 	rbp 		;if you set up a stack frame in main
-	ret 					;return to C runtine (calls exit)
+	xor 	edi, edi ;exit code 0
+	call 	exit 		; never returns
 
 ;----------------------------------
 ;-------------HUD------------------
 ;----------------------------------
 
 hud:
+	sub 		rsp, 8
 	call 		print_newline
 	call 		decorate 
 	
@@ -390,27 +401,32 @@ hud:
 	call 		print_number
 
 	call 		decorate
+	add 		rsp, 8
 	ret
 
 ;----------------------------------
 ;----------WELCOME-----------------
 ;----------------------------------
 welcome:
+	sub 		rsp, 8
 	call 		print_newline
 	lea 		rdi, [WELCOME_MSG]
 	call 		print_string
 	call 		print_newline
 	call 		continue_prompt
+	add 		rsp, 8
 	ret
 
 ;----------------------------------
 ;----CONTINUE_PROMPT-------
 ;----------------------------------
 continue_prompt:
+	sub 		rsp, 8
 	call 		print_newline
 	lea 		rdi, [CONTINUE_MSG]
 	call 		print_string
 	call 		read_number
+	add 		rsp, 8
 	ret
 
 ;----------------------------------
@@ -434,17 +450,20 @@ decorate:
 ;----------UPDATE--------------
 ;----------------------------------
 update:	
+	sub 		rsp, 8
 	call 		print_newline
 	call 		decorate
 	lea 		rdi, [UPDATE_MSG]
 	call 		print_string
 	call 		decorate
+	add 		rsp, 8
 	ret
 
 ;----------------------------------
 ;---------DRAW---------------------
 ;----------------------------------
 draw:
+	sub 		rsp, 8
  	call 		print_newline
 	call 		decorate 	
 	lea 		rdi, [DRAW_MSG]
@@ -452,12 +471,14 @@ draw:
 	call 		print_newline
 	call 		draw_board
 	call 		decorate
+	add 		rsp, 8
 	ret
 	
 ;----------------------------------
 ;--------GAMEPLAY------------------
 ;----------------------------------
 gameplay:
+	sub 		rsp, 8
 	call 		print_newline
 	call 		decorate
 	call 		collision
@@ -469,6 +490,7 @@ gameplay:
 	call 		check_lose
 
 .gameplay_done:
+	add 		rsp, 8
 	ret
 
 ;----------------------------------
@@ -476,14 +498,16 @@ gameplay:
 ;----------------------------------
 
 replay:
+	sub 		rsp, 8
 	call 		print_newline
 	lea 		rdi, [REPLAY_MSG]
 	call 		print_string
-	call 		print_number
+	call 		read_number
 
 	cmp 		eax, 0
 	je 			end_game
 	call 		gameloop
+	add 		rsp, 8
 	ret
 
 
@@ -491,13 +515,16 @@ replay:
 ;-------GAMELOOP-------------------
 ;----------------------------------
 gameloop:
+	sub 		rsp, 8
 	call 		update
 	call 		draw
 	call 		input 
 	call 		gameplay
 	call 		hud
 	call 		replay
+	add 		rsp, 8
 	ret
+
 
 ;----------------------------------
 ;---------MAIN--------------------
