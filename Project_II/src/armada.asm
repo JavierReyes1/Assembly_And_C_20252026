@@ -293,7 +293,7 @@ read_number:
 	lea rsi, [INPUT_BUF]
 	xor rax, rax
 	call scanf
-	movzx eax, byte [INPUT_BUF]
+	mov eax, byte [INPUT_BUF]
 	ret
 
 
