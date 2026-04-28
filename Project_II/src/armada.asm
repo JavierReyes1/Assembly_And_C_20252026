@@ -255,6 +255,33 @@ end_game:
 	ret 					;return to C runtine (calls exit)
 
 ;----------------------------------
+;-------------HUD------------------
+;----------------------------------
+
+hud:
+	call 		print_newline
+	call 		decorate 
+	
+	lea 		rdi, [HUD_MSG]
+	call 		print_string
+	movzx 	edi, byte[SHIPS_LEFT]
+	call 		print_number
+
+	call 		print_newline
+
+	lea 		rdi, [SHOTS_MSG]
+	call 		print_string
+	movzx   edi, byte[SHOTS_LEFT]
+	call 		print_number
+
+	call 		decorate
+	ret
+
+;----------------------------------
+;----------------------------------
+;----------------------------------
+
+;----------------------------------
 ;----------------------------------
 ;----------------------------------
 
@@ -279,6 +306,10 @@ section .data
 
 	WIN_MSG:    db '*** SPAIN PREVAILS! ALL ENGLISH SHIPS SUNK! ***', 0
 	LOSE_MSG:   db '*** ENGLAND WINS! THE ARMADA SURVIVES! ***', 0
+
+	HUD_MSG:    db 'SHIPS REMAINING: ', 0
+	SHOTS_MSG:  db 'CANNON SHOTS REMAINING: ', 0
+
 
 	SHIP1_ROW:			db 0
 	SHIP1_COL:			db 0
